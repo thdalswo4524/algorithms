@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Algorithms Week 3 — Series & Stacks</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --accent: #22c55e;
+      --accent2: #34d399;
+      --accent-dim: #16a34a;
+      --bg: #0a0c10;
+      --surface: #111318;
+      --surface2: #1a1d24;
+      --border: #2a2d35;
+      --text: #e2e8f0;
+      --text-dim: #8892a4;
+    }
+
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Hero ── */
+    .hero {
+      background: linear-gradient(135deg, #0a0c10 0%, #0a140d 50%, #0a0c10 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 72px 24px 56px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 60% 40% at 50% 0%, rgba(34,197,94,0.1) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--accent);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+    .hero h1 {
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 12px;
+    }
+    .hero h1 span { color: var(--accent); }
+    .hero-sub {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem;
+      color: var(--accent2);
+      margin-bottom: 10px;
+    }
+    .hero p {
+      color: var(--text-dim);
+      font-size: 0.95rem;
+      max-width: 520px;
+      margin: 0 auto;
+      line-height: 1.7;
+    }
+    .hero-tags {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 28px;
+    }
+    .tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      padding: 4px 12px;
+      border: 1px solid var(--accent-dim);
+      border-radius: 20px;
+      color: var(--accent);
+      letter-spacing: 0.05em;
+    }
+
+    /* ── Nav ── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(10,12,16,0.95);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      overflow-x: auto;
+    }
+    .nav-inner {
+      display: flex;
+      gap: 0;
+      max-width: 960px;
+      margin: 0 auto;
+    }
+    nav a {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      text-decoration: none;
+      padding: 14px 16px;
+      border-bottom: 2px solid transparent;
+      white-space: nowrap;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    nav a:hover, nav a.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+
+    /* ── Layout ── */
+    main {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 56px 24px 80px;
+      display: flex;
+      flex-direction: column;
+      gap: 64px;
+    }
+
+    section { scroll-margin-top: 60px; }
+
+    .sec-header {
+      margin-bottom: 28px;
+    }
+    .sec-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--accent);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .sec-title {
+      font-size: clamp(1.3rem, 3vw, 1.8rem);
+      font-weight: 700;
+      color: #fff;
+    }
+    .sec-desc {
+      color: var(--text-dim);
+      font-size: 0.9rem;
+      margin-top: 8px;
+      line-height: 1.6;
+    }
+
+    /* ── Card ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 28px;
+    }
+    .card + .card { margin-top: 16px; }
+    .card-title {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--accent2);
+      margin-bottom: 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    /* ── Formula Box ── */
+    .formula {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: 8px;
+      padding: 20px 24px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1rem;
+      color: var(--accent);
+      text-align: center;
+      margin: 16px 0;
+      line-height: 1.8;
+    }
+    .formula .math { font-size: 1.15rem; color: #fff; }
+    .formula .approx { color: var(--accent2); font-size: 0.85rem; display: block; margin-top: 4px; }
+
+    /* ── Interactive: Arithmetic Calculator ── */
+    .calc-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    .calc-row label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+      color: var(--text-dim);
+    }
+    .calc-input {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem;
+      padding: 8px 12px;
+      width: 90px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .calc-input:focus { border-color: var(--accent); }
+    .calc-btn {
+      background: var(--accent-dim);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 18px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .calc-btn:hover { background: var(--accent); }
+
+    .result-box {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 20px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--text-dim);
+    }
+    .result-box .result-num {
+      font-size: 1.4rem;
+      color: var(--accent);
+      font-weight: 700;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    /* ── Proof Tabs ── */
+    .tab-bar {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 20px;
+    }
+    .tab-btn {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      padding: 10px 18px;
+      cursor: pointer;
+      transition: color 0.2s, border-color 0.2s;
+      letter-spacing: 0.05em;
+    }
+    .tab-btn.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── Proof Visualization ── */
+    .proof-visual {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      line-height: 2;
+      overflow-x: auto;
+    }
+    .proof-visual .row1 { color: #93c5fd; }
+    .proof-visual .row2 { color: #f9a8d4; }
+    .proof-visual .row3 { color: var(--accent); font-weight: 700; }
+    .proof-visual .divider {
+      border-top: 1px solid var(--border);
+      margin: 4px 0;
+    }
+
+    /* ── Bar Chart ── */
+    .bar-chart {
+      display: flex;
+      align-items: flex-end;
+      gap: 3px;
+      height: 120px;
+      padding: 8px 0 4px;
+      overflow-x: auto;
+    }
+    .bar {
+      flex: 1;
+      min-width: 14px;
+      border-radius: 3px 3px 0 0;
+      transition: height 0.4s ease;
+      cursor: default;
+    }
+    .bar:hover { opacity: 0.8; }
+
+    /* ── Polynomial Table ── */
+    .poly-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+    }
+    .poly-table th {
+      background: var(--surface2);
+      color: var(--accent);
+      padding: 10px 14px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+      font-weight: 700;
+    }
+    .poly-table td {
+      padding: 10px 14px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-dim);
+    }
+    .poly-table tr:last-child td { border-bottom: none; }
+    .poly-table td.val { color: var(--text); }
+    .poly-table td.approx { color: var(--accent2); }
+    .poly-table td.error { color: #fb923c; }
+
+    /* ── Train Simulator ── */
+    .train-layout {
+      display: grid;
+      grid-template-columns: 1fr 80px 1fr;
+      grid-template-rows: auto auto auto;
+      gap: 8px;
+      align-items: center;
+      margin: 20px 0;
+    }
+    .track-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      text-align: center;
+      letter-spacing: 0.1em;
+    }
+    .track {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px;
+      min-height: 48px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+    .track.stack {
+      flex-direction: column-reverse;
+      min-height: 120px;
+      align-items: center;
+    }
+    .stack-label-vert {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      color: var(--accent2);
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .train-car {
+      background: var(--accent-dim);
+      color: #fff;
+      border-radius: 4px;
+      padding: 4px 10px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      font-weight: 700;
+      min-width: 32px;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+    .train-car.highlight {
+      background: var(--accent);
+      box-shadow: 0 0 8px rgba(34,197,94,0.4);
+    }
+    .train-controls {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+    .step-log {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      min-height: 60px;
+      line-height: 1.8;
+      margin-top: 12px;
+    }
+
+    /* ── Catalan ── */
+    .catalan-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+      gap: 8px;
+    }
+    .catalan-cell {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 8px;
+      text-align: center;
+    }
+    .catalan-cell .cn {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      margin-bottom: 4px;
+    }
+    .catalan-cell .cv {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.95rem;
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    /* ── Quiz ── */
+    .quiz-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 22px;
+      margin-bottom: 14px;
+    }
+    .quiz-q {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+    .quiz-q .code {
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--accent2);
+      font-size: 0.9rem;
+    }
+    .quiz-options {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .quiz-opt {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 16px;
+      font-size: 0.87rem;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .quiz-opt:hover { border-color: var(--accent); }
+    .quiz-opt.correct { border-color: var(--accent); background: rgba(34,197,94,0.12); color: var(--accent); }
+    .quiz-opt.wrong { border-color: #ef4444; background: rgba(239,68,68,0.1); color: #ef4444; }
+    .quiz-explain {
+      display: none;
+      margin-top: 12px;
+      padding: 12px 14px;
+      background: rgba(34,197,94,0.07);
+      border-left: 3px solid var(--accent);
+      border-radius: 4px;
+      font-size: 0.82rem;
+      color: var(--text-dim);
+      line-height: 1.6;
+    }
+    .quiz-explain.show { display: block; }
+
+    /* ── Info callout ── */
+    .callout {
+      background: rgba(34,197,94,0.06);
+      border: 1px solid rgba(34,197,94,0.2);
+      border-radius: 8px;
+      padding: 14px 18px;
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      line-height: 1.6;
+      margin: 12px 0;
+    }
+    .callout strong { color: var(--accent); }
+
+    .step-list {
+      list-style: none;
+      counter-reset: step;
+    }
+    .step-list li {
+      counter-increment: step;
+      padding: 8px 0 8px 40px;
+      position: relative;
+      font-size: 0.88rem;
+      color: var(--text-dim);
+      line-height: 1.6;
+      border-bottom: 1px solid rgba(42,45,53,0.5);
+    }
+    .step-list li:last-child { border-bottom: none; }
+    .step-list li::before {
+      content: counter(step);
+      position: absolute;
+      left: 0;
+      top: 8px;
+      width: 24px;
+      height: 24px;
+      background: var(--accent-dim);
+      color: #fff;
+      border-radius: 50%;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ── Back button ── */
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      text-decoration: none;
+      padding: 10px 16px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      transition: color 0.2s, border-color 0.2s;
+      margin-bottom: 32px;
+    }
+    .back-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+    footer {
+      text-align: center;
+      padding: 32px 24px;
+      border-top: 1px solid var(--border);
+      color: var(--text-dim);
+      font-size: 0.78rem;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    @media (max-width: 600px) {
+      .train-layout { grid-template-columns: 1fr; }
+      .calc-row { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Hero -->
+<div class="hero">
+  <div class="hero-label">Algorithms · Week 03</div>
+  <h1>Series &amp; <span>Stacks</span></h1>
+  <div class="hero-sub">수열 공식 · 증명 · 스택 정렬</div>
+  <p>등차수열부터 다항 급수 일반화까지, 그리고 스택으로 정렬 가능한 순열의 개수를 세는 카탈란 수.</p>
+  <div class="hero-tags">
+    <span class="tag">Arithmetic Series</span>
+    <span class="tag">Polynomial Series</span>
+    <span class="tag">Mathematical Induction</span>
+    <span class="tag">Stack Sorting</span>
+    <span class="tag">Catalan Number</span>
+  </div>
+</div>
+
+<!-- Nav -->
+<nav>
+  <div class="nav-inner">
+    <a href="#arithmetic">Arithmetic Series</a>
+    <a href="#polynomial">Polynomial Series</a>
+    <a href="#train">Train Rearrangement</a>
+    <a href="#catalan">Catalan Number</a>
+    <a href="#quiz">Quiz</a>
+  </div>
+</nav>
+
+<main>
+  <a href="index.html" class="back-btn">← 목록으로</a>
+
+  <!-- ══════════════════════════════════════════
+       SECTION 1: Arithmetic Series
+  ══════════════════════════════════════════ -->
+  <section id="arithmetic">
+    <div class="sec-header">
+      <div class="sec-label">// 01</div>
+      <div class="sec-title">Arithmetic Series</div>
+      <div class="sec-desc">등차수열의 합 공식과 두 가지 증명 방법 — 대칭 더하기와 수학적 귀납법.</div>
+    </div>
+
+    <!-- Formula -->
+    <div class="card">
+      <div class="card-title">핵심 공식</div>
+      <div class="formula">
+        <div class="math">0 + 1 + 2 + 3 + ⋯ + n = Σk = n(n+1) / 2</div>
+        <span class="approx">점근적 근사: ≈ n² / 2</span>
+      </div>
+      <div class="callout">
+        각 항이 상수(보통 1)씩 증가하는 수열. 합을 구하는 공식은 <strong>O(n²)</strong> 알고리즘 분석의 핵심.
+      </div>
+    </div>
+
+    <!-- Calculator -->
+    <div class="card">
+      <div class="card-title">계산기 — 합산 시각화</div>
+      <div class="calc-row">
+        <label>n =</label>
+        <input type="number" class="calc-input" id="arith-n" value="10" min="0" max="100" />
+        <button class="calc-btn" onclick="calcArith()">계산</button>
+      </div>
+      <div class="result-box" id="arith-result">
+        <span class="result-num" id="arith-ans">55</span>
+        <span id="arith-formula-out">Σk = 10 × 11 / 2 = 55 (정확), 근사: n²/2 = 50</span>
+      </div>
+      <!-- Bar chart -->
+      <div style="margin-top:16px;">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--text-dim);margin-bottom:6px;">▸ 항별 값 시각화 (k = 1 ~ n)</div>
+        <div class="bar-chart" id="arith-bars"></div>
+      </div>
+    </div>
+
+    <!-- Proof Tabs -->
+    <div class="card">
+      <div class="card-title">증명 방법</div>
+      <div class="tab-bar">
+        <button class="tab-btn active" onclick="switchTab('proof',0,this)">Proof 1: 대칭 더하기</button>
+        <button class="tab-btn" onclick="switchTab('proof',1,this)">Proof 2: 수학적 귀납법</button>
+      </div>
+
+      <div id="proof-0" class="tab-panel active">
+        <div class="proof-visual">
+          <div class="row1">  1  +  2  +  3  + ⋯ + (n-1) +  n</div>
+          <div class="divider"></div>
+          <div class="row2">+ n + (n-1) + (n-2) + ⋯ +  2  +  1</div>
+          <div class="divider"></div>
+          <div class="row3">= (n+1) + (n+1) + (n+1) + ⋯ + (n+1)  ← n개</div>
+        </div>
+        <div class="callout" style="margin-top:14px;">
+          합이 <strong>n(n+1)</strong>인데 수열을 두 번 더했으므로 → <strong>n(n+1)/2</strong>
+        </div>
+      </div>
+
+      <div id="proof-1" class="tab-panel">
+        <ol class="step-list">
+          <li><strong>Base case</strong>: n=0일 때 Σk = 0 = 0(0+1)/2 ✓</li>
+          <li><strong>귀납 가정</strong>: n에서 성립한다고 가정 — Σk = n(n+1)/2</li>
+          <li><strong>n+1 단계</strong>: Σ(k, 0→n+1) = (n+1) + Σ(k, 0→n) = (n+1) + n(n+1)/2</li>
+          <li>= (n+1)·2/2 + n(n+1)/2 = (n+1)(n+2)/2 = (n+1)((n+1)+1)/2 ✓</li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════
+       SECTION 2: Polynomial Series
+  ══════════════════════════════════════════ -->
+  <section id="polynomial">
+    <div class="sec-header">
+      <div class="sec-label">// 02</div>
+      <div class="sec-title">Polynomial Series</div>
+      <div class="sec-desc">k의 거듭제곱 합 공식과 일반화 — Σkᵈ ≈ nᵈ⁺¹/(d+1)</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">주요 공식 모음</div>
+      <div class="formula">
+        <div class="math">Σk &nbsp;= n(n+1)/2 <span style="color:var(--text-dim)">≈</span> n²/2</div>
+      </div>
+      <div class="formula">
+        <div class="math">Σk² = n(n+1)(2n+1)/6 <span style="color:var(--text-dim)">≈</span> n³/3</div>
+      </div>
+      <div class="formula">
+        <div class="math">Σk³ = n²(n+1)²/4 <span style="color:var(--text-dim)">≈</span> n⁴/4</div>
+      </div>
+      <div class="formula" style="border-left-color:var(--accent2)">
+        <div class="math" style="color:var(--accent2)">일반화: Σkᵈ ≈ nᵈ⁺¹ / (d+1)</div>
+        <span class="approx">n → ∞ 일 때 상대 오차 → 0</span>
+      </div>
+    </div>
+
+    <!-- Poly Calculator -->
+    <div class="card">
+      <div class="card-title">Σkᵈ 계산기 — 정확값 vs 근사값</div>
+      <div class="calc-row">
+        <label>n =</label>
+        <input type="number" class="calc-input" id="poly-n" value="20" min="1" max="500" />
+        <label>d =</label>
+        <input type="number" class="calc-input" id="poly-d" value="2" min="1" max="5" />
+        <button class="calc-btn" onclick="calcPoly()">계산</button>
+      </div>
+      <div class="result-box" id="poly-result" style="color:var(--text)">계산 버튼을 누르세요.</div>
+      <div style="margin-top:16px;overflow-x:auto;">
+        <table class="poly-table" id="poly-table">
+          <thead>
+            <tr>
+              <th>n</th><th>Σkᵈ (정확)</th><th>nᵈ⁺¹/(d+1) (근사)</th><th>상대 오차(%)</th>
+            </tr>
+          </thead>
+          <tbody id="poly-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Error callout -->
+    <div class="card">
+      <div class="card-title">오차 분석</div>
+      <div class="callout">
+        <strong>d &gt; 1</strong>이면 오차는 <strong>nᵈ/2 ≤ error &lt; nᵈ</strong> 범위에 존재.<br/>
+        그러나 nᵈ ≪ nᵈ⁺¹ 이므로 <strong>상대 오차 → 0</strong>.
+      </div>
+      <div class="formula" style="font-size:0.85rem">
+        <div>lim<sub>n→∞</sub> [ nᵈ⁺¹/(d+1) ] / [ Σkᵈ ] = 1</div>
+      </div>
+      <div class="callout">
+        이 성질 덕분에 알고리즘 분석에서 Σkᵈ = <strong>Θ(nᵈ⁺¹)</strong> 으로 쓸 수 있다.
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════
+       SECTION 3: Train Rearrangement
+  ══════════════════════════════════════════ -->
+  <section id="train">
+    <div class="sec-header">
+      <div class="sec-label">// 03</div>
+      <div class="sec-title">Train Rearrangement</div>
+      <div class="sec-desc">T자형 철로(스택)를 이용한 기차 재배열 — 어떤 순열이 정렬 가능한가?</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">문제 설명</div>
+      <div class="callout">
+        기차가 <strong>(a)</strong>에서 들어와 <strong>(b)</strong>(스택)를 거쳐 <strong>(c)</strong>로 나간다.<br/>
+        스택을 사용해 임의의 입력 순서를 <strong>(1, 2, 3, …, n)</strong> 으로 정렬할 수 있는가?
+      </div>
+      <div class="callout" style="margin-top:8px;">
+        <strong>답: 항상 가능하다!</strong> 스택 1개로 n개의 기차를 순서대로 정렬할 수 있다.<br/>
+        스택이 2개라면? → 더 많은 순열이 정렬 가능하지만 <em>모든</em> 순열은 아니다.
+      </div>
+    </div>
+
+    <!-- Train Simulator -->
+    <div class="card">
+      <div class="card-title">인터랙티브 시뮬레이터 — (3,2,1,4) → (1,2,3,4)</div>
+
+      <div class="train-layout" id="train-sim">
+        <!-- row 1: labels -->
+        <div class="track-label">입력 (a)</div>
+        <div></div>
+        <div class="track-label">출력 (c)</div>
+        <!-- row 2: tracks -->
+        <div class="track" id="track-a"></div>
+        <div class="stack-label-vert">
+          <span style="color:var(--accent);font-size:0.8rem">↕</span>
+          <span>스택</span>
+          <span>(b)</span>
+        </div>
+        <div class="track" id="track-c"></div>
+        <!-- row 3: stack -->
+        <div></div>
+        <div class="track stack" id="track-b"></div>
+        <div></div>
+      </div>
+
+      <div class="train-controls">
+        <button class="calc-btn" onclick="trainStep()">▶ 다음 단계</button>
+        <button class="calc-btn" style="background:#374151" onclick="trainReset()">↺ 초기화</button>
+      </div>
+      <div class="step-log" id="step-log">시뮬레이션 준비 완료. "다음 단계" 버튼을 누르세요.</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">스택 정렬 불가능한 순열</div>
+      <div class="callout">
+        스택 1개로 정렬 <strong>불가능한</strong> 패턴: <strong>n-m-k (n &gt; k &gt; m)</strong> 패턴.<br/>
+        예) [2,3,1] — 3을 꺼내려면 2를 먼저 꺼내야 하는데 1이 아직 입력에 있음.
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════
+       SECTION 4: Catalan Number
+  ══════════════════════════════════════════ -->
+  <section id="catalan">
+    <div class="sec-header">
+      <div class="sec-label">// 04</div>
+      <div class="sec-title">Catalan Number</div>
+      <div class="sec-desc">스택 1개로 정렬 가능한 순열의 수 = n번째 카탈란 수 Cₙ.</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">카탈란 수 공식</div>
+      <div class="formula">
+        <div class="math">Cₙ = C(2n, n) / (n+1) = (2n)! / ((n+1)! · n!)</div>
+        <span class="approx">n개 원소에서 스택 정렬 가능한 순열의 수</span>
+      </div>
+      <div class="callout">
+        전체 n! 가지 순열 중에서 카탈란 수만큼만 스택 하나로 정렬 가능.<br/>
+        카탈란 수는 이진 트리의 개수, 괄호 쌍의 수 등 다양한 조합론 문제에 등장한다.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">카탈란 수 vs 전체 순열 수</div>
+      <div class="catalan-grid" id="catalan-grid"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">재귀적 정의</div>
+      <div class="formula">
+        <div class="math">C₀ = 1, &nbsp; Cₙ₊₁ = Σ(k=0→n) Cₖ · Cₙ₋ₖ</div>
+      </div>
+      <div class="callout">
+        점화식으로도 계산 가능. 이 구조는 DP 알고리즘과 직결된다.
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════
+       SECTION 5: Quiz
+  ══════════════════════════════════════════ -->
+  <section id="quiz">
+    <div class="sec-header">
+      <div class="sec-label">// 05</div>
+      <div class="sec-title">Quiz</div>
+      <div class="sec-desc">개념 확인 — 선택지를 클릭하면 정답과 해설을 확인할 수 있습니다.</div>
+    </div>
+
+    <div id="quiz-container"></div>
+  </section>
+
+</main>
+
+<footer>thdalswo4524 · Algorithms · Week 03 · Series &amp; Stacks</footer>
+
+<script>
+/* ══════════════════════════════════════════
+   TAB SWITCHING
+══════════════════════════════════════════ */
+function switchTab(group, idx, btn) {
+  document.querySelectorAll(`[id^="${group}-"]`).forEach((p, i) => {
+    p.classList.toggle('active', i === idx);
+  });
+  btn.closest('.tab-bar').querySelectorAll('.tab-btn').forEach((b, i) => {
+    b.classList.toggle('active', i === idx);
+  });
+}
+
+/* ══════════════════════════════════════════
+   NAV ACTIVE STATE
+══════════════════════════════════════════ */
+const navLinks = document.querySelectorAll('nav a');
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      navLinks.forEach(a => a.classList.remove('active'));
+      const id = e.target.id;
+      const link = document.querySelector(`nav a[href="#${id}"]`);
+      if (link) link.classList.add('active');
+    }
+  });
+}, { rootMargin: '-50% 0px -40% 0px' });
+document.querySelectorAll('section[id]').forEach(s => observer.observe(s));
+
+/* ══════════════════════════════════════════
+   ARITHMETIC SERIES CALCULATOR
+══════════════════════════════════════════ */
+function calcArith() {
+  const n = Math.max(0, Math.min(100, parseInt(document.getElementById('arith-n').value) || 0));
+  const exact = n * (n + 1) / 2;
+  const approx = (n * n / 2).toFixed(1);
+  document.getElementById('arith-ans').textContent = exact;
+  document.getElementById('arith-formula-out').textContent =
+    `Σk = ${n} × ${n+1} / 2 = ${exact} (정확)  |  근사 n²/2 = ${approx}`;
+  // bar chart
+  const container = document.getElementById('arith-bars');
+  container.innerHTML = '';
+  const maxVal = n;
+  for (let k = 1; k <= Math.min(n, 40); k++) {
+    const div = document.createElement('div');
+    div.className = 'bar';
+    div.style.height = maxVal > 0 ? `${(k / maxVal) * 100}px` : '4px';
+    const hue = 120 + (k / Math.max(n,1)) * 40;
+    div.style.background = `hsl(${hue}, 70%, 45%)`;
+    div.title = `k=${k}`;
+    container.appendChild(div);
+  }
+}
+calcArith();
+
+/* ══════════════════════════════════════════
+   POLYNOMIAL SERIES CALCULATOR
+══════════════════════════════════════════ */
+function sumPow(n, d) {
+  let s = 0;
+  for (let k = 0; k <= n; k++) s += Math.pow(k, d);
+  return s;
+}
+
+function calcPoly() {
+  const n = Math.max(1, Math.min(500, parseInt(document.getElementById('poly-n').value) || 20));
+  const d = Math.max(1, Math.min(5, parseInt(document.getElementById('poly-d').value) || 2));
+  const exact = sumPow(n, d);
+  const approx = Math.pow(n, d+1) / (d+1);
+  const err = Math.abs((exact - approx) / exact * 100).toFixed(2);
+  document.getElementById('poly-result').innerHTML =
+    `<div style="display:flex;gap:24px;flex-wrap:wrap;">
+      <div><div style="font-size:0.7rem;color:var(--text-dim)">정확값</div><div style="font-size:1.3rem;color:var(--accent);font-family:'JetBrains Mono',monospace">${exact.toLocaleString()}</div></div>
+      <div><div style="font-size:0.7rem;color:var(--text-dim)">근사값</div><div style="font-size:1.3rem;color:var(--accent2);font-family:'JetBrains Mono',monospace">${approx.toFixed(0).toLocaleString()}</div></div>
+      <div><div style="font-size:0.7rem;color:var(--text-dim)">상대 오차</div><div style="font-size:1.3rem;color:#fb923c;font-family:'JetBrains Mono',monospace">${err}%</div></div>
+    </div>`;
+  // table: n=1,5,10,20,50,n
+  const ns = [1, 5, 10, 20, 50, n].filter((v,i,a) => a.indexOf(v) === i).sort((a,b)=>a-b);
+  const tbody = document.getElementById('poly-tbody');
+  tbody.innerHTML = '';
+  ns.forEach(ni => {
+    const ex = sumPow(ni, d);
+    const ap = Math.pow(ni, d+1) / (d+1);
+    const e = ex > 0 ? Math.abs((ex - ap) / ex * 100).toFixed(2) : '0.00';
+    tbody.innerHTML += `<tr>
+      <td class="val">${ni}</td>
+      <td class="val">${ex.toLocaleString()}</td>
+      <td class="approx">${ap.toFixed(1)}</td>
+      <td class="error">${e}%</td>
+    </tr>`;
+  });
+}
+calcPoly();
+
+/* ══════════════════════════════════════════
+   TRAIN SIMULATOR
+══════════════════════════════════════════ */
+const trainSteps = [
+  { a:[2,1,4], b:[3],   c:[],      msg:'Train #3을 (a)→(b)로 이동' },
+  { a:[1,4],   b:[3,2], c:[],      msg:'Train #2를 (a)→(b)로 이동' },
+  { a:[4],     b:[3,2,1],c:[],     msg:'Train #1을 (a)→(b)로 이동' },
+  { a:[4],     b:[3,2], c:[1],     msg:'Train #1을 (b)→(c)로 이동' },
+  { a:[4],     b:[3],   c:[1,2],   msg:'Train #2를 (b)→(c)로 이동' },
+  { a:[4],     b:[],    c:[1,2,3], msg:'Train #3을 (b)→(c)로 이동' },
+  { a:[],      b:[4],   c:[1,2,3], msg:'Train #4를 (a)→(b)로 이동' },
+  { a:[],      b:[],    c:[1,2,3,4], msg:'Train #4를 (b)→(c)로 이동 — 완료!' },
+];
+let trainIdx = -1;
+const initState = { a:[3,2,1,4], b:[], c:[] };
+
+function renderTrack(id, arr, highlight) {
+  const el = document.getElementById(id);
+  el.innerHTML = '';
+  arr.forEach((v, i) => {
+    const div = document.createElement('div');
+    div.className = 'train-car' + (highlight === v ? ' highlight' : '');
+    div.textContent = v;
+    el.appendChild(div);
+  });
+}
+
+function trainReset() {
+  trainIdx = -1;
+  renderTrack('track-a', [...initState.a].reverse(), null);
+  renderTrack('track-b', [], null);
+  renderTrack('track-c', [], null);
+  document.getElementById('step-log').textContent = '시뮬레이션 준비 완료. "다음 단계" 버튼을 누르세요.';
+}
+
+function trainStep() {
+  if (trainIdx >= trainSteps.length - 1) {
+    document.getElementById('step-log').textContent = '시뮬레이션 완료! 초기화 버튼을 누르세요.';
+    return;
+  }
+  trainIdx++;
+  const s = trainSteps[trainIdx];
+  renderTrack('track-a', [...s.a].reverse(), null);
+  renderTrack('track-b', s.b, null);
+  renderTrack('track-c', s.c, null);
+  document.getElementById('step-log').textContent =
+    `단계 ${trainIdx + 1} / ${trainSteps.length}: ${s.msg}`;
+}
+
+trainReset();
+
+/* ══════════════════════════════════════════
+   CATALAN NUMBERS
+══════════════════════════════════════════ */
+function catalan(n) {
+  let c = 1;
+  for (let i = 0; i < n; i++) c = c * 2 * (2*i+1) / (i+2);
+  return Math.round(c);
+}
+function factorial(n) { let f=1; for(let i=2;i<=n;i++) f*=i; return f; }
+
+const grid = document.getElementById('catalan-grid');
+for (let n = 0; n <= 9; n++) {
+  const cn = catalan(n);
+  const fn = factorial(n);
+  const cell = document.createElement('div');
+  cell.className = 'catalan-cell';
+  cell.innerHTML = `<div class="cn">C(${n})</div><div class="cv">${cn}</div><div style="font-size:0.65rem;color:var(--text-dim);margin-top:2px;">n!=${fn}</div>`;
+  grid.appendChild(cell);
+}
+
+/* ══════════════════════════════════════════
+   QUIZ
+══════════════════════════════════════════ */
+const quizData = [
+  {
+    q: '0 + 1 + 2 + ⋯ + 100의 합은?',
+    opts: ['4950', '5050', '5150', '10100'],
+    ans: 1,
+    exp: '공식 n(n+1)/2에 n=100 대입: 100×101/2 = 5050.'
+  },
+  {
+    q: 'Σ(k=0→n) kᵈ 의 점근적 근사로 가장 올바른 것은?',
+    opts: ['nᵈ', 'nᵈ⁺¹', 'nᵈ⁺¹ / (d+1)', 'nᵈ⁻¹ / d'],
+    ans: 2,
+    exp: '일반화 공식: Σkᵈ ≈ nᵈ⁺¹/(d+1). n→∞ 에서 상대 오차가 0으로 수렴한다.'
+  },
+  {
+    q: 'Train Rearrangement에서 스택 역할을 하는 트랙은?',
+    opts: ['(a)', '(b)', '(c)', '(a)와 (c) 모두'],
+    ans: 1,
+    exp: '(b)가 T자 중간의 스택 역할. LIFO 구조로 push/pop 가능.'
+  },
+  {
+    q: '스택 1개로 정렬 가능한 n=4일 때의 순열 수는? (카탈란 수 C₄)',
+    opts: ['10', '14', '42', '24'],
+    ans: 1,
+    exp: 'C₄ = C(8,4)/5 = 70/5 = 14. 전체 4!=24 가지 중 14가지만 정렬 가능.'
+  },
+  {
+    q: '수학적 귀납법 증명에서 "귀납 단계"가 증명하는 것은?',
+    opts: [
+      'n=0일 때 성립함을 보인다',
+      'n=k이면 n=k+1에서도 성립함을 보인다',
+      '모든 n에서 동시에 성립함을 보인다',
+      'n이 홀수일 때만 성립함을 보인다'
+    ],
+    ans: 1,
+    exp: '귀납법: Base case(n=0)와 귀납 단계(n→n+1 전이)로 구성. 귀납 단계가 "n에서 성립 → n+1에서 성립"을 증명.'
+  },
+  {
+    q: 'Σk² 의 정확한 공식은?',
+    opts: [
+      'n(n+1)/2',
+      'n(n+1)(2n+1)/6',
+      'n²(n+1)²/4',
+      'n(n+1)(n+2)/6'
+    ],
+    ans: 1,
+    exp: 'Σk² = n(n+1)(2n+1)/6. d=3이면 Σk³ = n²(n+1)²/4.'
+  }
+];
+
+const qc = document.getElementById('quiz-container');
+quizData.forEach((q, qi) => {
+  const div = document.createElement('div');
+  div.className = 'quiz-item';
+  div.innerHTML = `
+    <div class="quiz-q">Q${qi+1}. ${q.q}</div>
+    <div class="quiz-options">
+      ${q.opts.map((o, oi) => `
+        <button class="quiz-opt" onclick="answerQuiz(${qi},${oi})">
+          <span style="color:var(--text-dim);margin-right:8px;">${String.fromCharCode(65+oi)}.</span>${o}
+        </button>
+      `).join('')}
+    </div>
+    <div class="quiz-explain" id="qe-${qi}">${q.exp}</div>
+  `;
+  qc.appendChild(div);
+});
+
+function answerQuiz(qi, oi) {
+  const item = qc.children[qi];
+  const opts = item.querySelectorAll('.quiz-opt');
+  opts.forEach(o => o.style.pointerEvents = 'none');
+  opts[oi].classList.add(oi === quizData[qi].ans ? 'correct' : 'wrong');
+  if (oi !== quizData[qi].ans) opts[quizData[qi].ans].classList.add('correct');
+  document.getElementById(`qe-${qi}`).classList.add('show');
+}
+</script>
+</body>
+</html>
